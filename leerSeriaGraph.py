@@ -42,7 +42,7 @@ def serial_ports():
 
 
 def getTime(tiempoCero):
-    return tiempoCero-time.time()
+    return time.time()-tiempoCero
 
 
 def readQuantity(cantidad, arduino):
@@ -69,6 +69,34 @@ def readQuantity(cantidad, arduino):
     return archivo_temp
 
 
+def readPeriod(tiempoLectura, arduino):
+    # print(tiempoLectura)
+    tiempo = 0
+    archivo_temp = []
+    tiempoCero = time.time()
+    while True:
+        try:
+            rawString = arduino.readline().decode('utf-8')
+        except UnicodeDecodeError:  # Si no se puede decodificar el primer dato por un error de sincronización se saltea
+            continue
+
+        tiempo = getTime(tiempoCero)
+        rawString = rawString[0:-2]  # se elimina el /r/n
+        print(rawString)
+        # el dato byte se convierte a string
+        archivo_temp.append([tiempo, int(rawString)])
+        # tiempo += 0.000392
+        # se guarda en un txt
+        # bar['value'] = int(i*100/cantidad)
+        # print(getTime(tiempoCero)-tiempoLectura)
+        if abs(getTime(tiempoCero)-tiempoLectura) < 0.02:
+            break
+    arduino.write(b'8')  # termina la transmision de arduino
+    arduino.close()  # se cierra el puerto serie
+
+    return archivo_temp
+
+
 def enviarInformacionSerie(puerto, opcion, parametro):
     archivo_temp = []
     arduino = serial.Serial(puerto, 9600)  # se abre el puerto serie
@@ -84,6 +112,8 @@ def enviarInformacionSerie(puerto, opcion, parametro):
         time.sleep(0.6)
         if opcion == False:
             archivo_temp = readQuantity(parametro, arduino)
+        else:
+            archivo_temp = readPeriod(parametro, arduino)
 
         # arduino.write(b'8')  # termina la transmision de arduino
         archivo_texto = open("pruebas.csv", "w")  # apertura en modo escritura
@@ -113,7 +143,7 @@ def btnComenzarClicked():
 
         print(tiempo)
         tiempo = 1 if tiempo == 0 else tiempo
-        enviarInformacionSerie(int(tiempo), combo.get())
+        enviarInformacionSerie(combo.get(), True, int(tiempo),)
 
 
 def tiempoClicked():
