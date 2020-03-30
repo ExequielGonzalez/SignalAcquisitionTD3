@@ -25,12 +25,15 @@ void loop()
             delay(200);
          }
          do
+            i = 0;
          {
             Serial.println(i);
             delay(10);
 
             i++;
-         } while (Serial.read() != '8');
+         }
+         while (Serial.read() != '8')
+            ;
       }
       for (int i = 0; i < 3; i++)
       {
